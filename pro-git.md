@@ -95,11 +95,18 @@ You've just rebased a branch, and you lost all your commits.
 Scenario: Fixing a broken branch
 --------------------------------
 
-Git contains a history of every modification you've made to a branch, called
-the *reflog*:
+Git records a history of every modification you've made to a branch.
+
+- New commits
+- Rebases
+- Merges
+- Checkouts
+- Pulls
+
+This is called the *reflog*, accessible via:
 
 ```bash
-git reflog
+git reflog [<branch>]
 ```
 
 <!-- end_slide -->
@@ -110,7 +117,7 @@ Scenario: Fixing a broken branch
 Example usage:
 
 ```bash +exec
-git -C ~/repos/mpc reflog main
+git reflog main
 ```
 
 <!-- end_slide -->
@@ -126,7 +133,7 @@ Bad options:
 <!-- pause -->
 - Abuse `git stash`... somehow?
 <!-- pause -->
-- Put everything into one commit?
+- Put everything into one commit
 
 <!-- end_slide -->
 
@@ -135,9 +142,8 @@ Scenario: Splitting commits in an unclean tree
 
 You can stage changes interactively:
 
-```bash
-git add -i # stage changes interactively
-git add -p <file> # stage changes through a prompt
+```bash +exec +acquire_terminal
+git add -p . # stage changes through a prompt
 ```
 
 <!-- end_slide -->
@@ -164,9 +170,9 @@ Git supports checking out the same clone of a repository in multiple locations
 (these directories are called *worktrees*):
 
 ```bash
-git worktree add # make a new directory with a clone
-git worktree list # what worktree's have you made?
-git worktree remove # make a new directory with a clone
+git worktree add <path>    # make a new directory with a clone
+git worktree list          # what worktree's have you made?
+git worktree remove <path> # make a new directory with a clone
 ```
 
 Limitation: two worktrees cannot have the same commit checked out at the same time!
@@ -176,22 +182,31 @@ Limitation: two worktrees cannot have the same commit checked out at the same ti
 Further reading
 ---------------
 
-Julia Evan's blog posts on git:
-- https://jvns.ca/blog/2023/11/23/branches-intuition-reality/
-
-The git book:
+# The git book:
 - https://git-scm.com/book/en/v2
+
+# Julia Evans' blog posts
+
+https://jvns.ca/#git
+
+Some highlights:
+- https://jvns.ca/blog/2023/11/23/branches-intuition-reality/
+- https://jvns.ca/blog/2024/01/05/do-we-think-of-git-commits-as-diffs--snapshots--or-histories/
 
 <!-- end_slide -->
 
 Materials
 ---------
 
+<!-- alignment: center -->
 Materials from this presentation can be obtained here:
 
 ```bash +exec_replace +no_background
 echo https://github.com/sadlerap/pro-git | qrencode -t UTF8i -m 2 | lolcat -f
 ```
+
 ```
 https://github.com/sadlerap/pro-git
 ```
+
+Built with https://github.com/mfontanini/presenterm

@@ -1,120 +1,197 @@
 ---
 title: Pro `git`
 author: Andy Sadler, Red Hat
-sub_title: Teaching better commit hygiene
+sub_title: Teaching better git usage
 theme:
   extends: dark
-  override:
-    footer:
-      style: progress_bar
+  # override:
+  #   footer:
+  #     style: progress_bar
 ---
 
 Overview
 --------
 
+<!-- alignment: center -->
+
 # What this presentation is
 
-- A brief tour of `git`'s more advanced features
 - A tutorial in wrangling commits
-
-# My goal
-Everyone will have learned at least something new.
+- A brief tour of `git`'s more advanced features
 
 <!-- end_slide -->
 
-Git's data model
-----------------
+Scenario: Applying review to a non-HEAD commit
+----------------------------------------------
 
-<!-- column_layout: [2, 3] -->
-
-<!-- pause -->
-
-<!-- column: 0 -->
-
-# Commits
-
-A commit is a node in a directed acyclic graph.
+You need to apply changes to a commit buried in a branch.
 
 <!-- pause -->
 
-They contain some important information:
+Bad options:
+- Add another commit to the end of the branch
+<!-- pause -->
+- `git checkout` + `git cherry-pick`
+<!-- pause -->
+- Remake your commits by hand
+<!-- pause -->
+- Copious application of `git commit --amend`
+<!-- pause -->
 
-- Author and Date
-- A commit message
-- A tree (all the files you have in that commit)
-  - Commits don't contain diffs!
+<!-- end_slide -->
+
+Scenario: Applying review to a non-HEAD commit
+----------------------------------------------
+
+# Interactive rebasing
+
+Git has a tool for interactively managing commits:
+
+```bash
+git rebase -i origin/main # or something resembling a commit reference
+```
+
+A domain-specific language for rewriting a branch's history
 
 <!-- pause -->
 
-Commits have important properties:
+Some commands:
+- `pick <commit>`: use commit
+- `reword <commit>`: use commit, but edit the commit message
+- `edit <commit>`: use commit, but stop for amending
+- `squash <commit>`: use commit, but meld into previous commit
+- `fixup <commit>`: squash's a commit into the previous commit.  Uses the
+previous commit's message
 
-- Immutable
-- Uniquely identified by hash (barring attacks on SHA-1)
+<!-- end_slide -->
 
-<!-- column: 1 -->
+Scenario: Applying review to a non-HEAD commit
+----------------------------------------------
 
-<!-- pause -->
+Git can configure a commit to be automatically squashed into another commit (called a *fixup*):
 
-```commit +no_background {1|2-3|4-19|21-23}
-tree 78db4929efd8cc3bad6c57128912bf58fa2fb479
-author Andy Sadler <ansadler@redhat.com> 1751918585 -0500
-committer Andy Sadler <ansadler@redhat.com> 1751918585 -0500
-gpgsig -----BEGIN PGP SIGNATURE-----
- 
- iQIzBAABCgAdFiEE/gSIuZZ6oleJBl8UelM1fNWBc90FAmhsJ/sACgkQelM1fNWB
- c93m1Q//TUMkPLk6/C5KuLmeizL64MWYzvl3/qYgkeve9aJh0owVQbbhiS8yngid
- 9TX7idP1cAOYELPLGSx2Yq5vyMTHp3kufrrO4XseXP1oT05ZD1+W2U5gzPyRW6NI
- 0cS2BUy0bFbToBFZgIIq3i2zUE6v6m/P5/QiHqTYhkkwqtm+D0PC+sNhW9Ov1dZm
- bj97+qkoAAsKMLpOuS+5u3Y5szNy4+XXVOF49u663XFmGD7N3vtf+vPL68Db0kFJ
- JLy/9bmkLeAL6IXldGKFvP/Hvlj9azPgUa5sjV4f1jtctFfHQmOT3qtULSmPfegb
- IpPumxUeHkT+e86MJZwEYT3FV/S5j3Id6CizZEMdWwANpNjreDrA70fDc6wGmUND
- f0x6P8zUFpUAJS8yOfVaxrtr/NsIJ9Vl6kH7Who4AbDzaibdC38QN/rRqOIVm/fE
- 6qcG/ur1zeX18jHOEOlu3c0yIKxZ1rF3BjA6hsKwvfgAB8+AphtmkymHQnUc2H3G
- AYfzCofCEIbPLRFbNlVBzU7burAP0J94j80RlibpPLvibnwEIKR1QoAnvuw4dQ6G
- sY+Ym1z6Rc9aUII0hklW2j/kR6okhEhRJ611cuYUi5Wp0+URCQ1sRGITq4xdzG5E
- Flo/8Jc8J/BxBhvWZ6Ola0N61UxEvgXxsP9keR9kcR5r8cBVRnQ=
- =l0xS
- -----END PGP SIGNATURE-----
+```bash
+git commit --fixup=<commit> # make a commit
+git rebase --autosquash <commit> # apply squashes since <commit>
+```
 
-initial commit
+Useful if your change applies cleanly to a previous commit.  Less useful for
+more invasive changes.
 
-Signed-off-by: Andy Sadler <ansadler@redhat.com>
+Enable by default with:
+```bash
+git config --global rebase.autoSquash true
 ```
 
 <!-- end_slide -->
 
-Git's data model
-----------------
+Scenario: Fixing a broken branch
+--------------------------------
 
-<!-- column_layout: [2, 4] -->
+You've just rebased a branch, and you lost all your commits.
 
-<!-- column: 0 -->
+<!-- end_slide -->
 
-# Branches
+Scenario: Fixing a broken branch
+--------------------------------
 
-Branches are a pointer to a commit.
+Git contains a history of every modification you've made to a branch, called
+the *reflog*:
 
-They also track the history of that pointer, keeping a record of every commit
-that the branch has referenced.
-
-<!-- column: 1 -->
-
-```bash +exec +no_background
-git reflog HEAD | tail
+```bash
+git reflog
 ```
 
 <!-- end_slide -->
 
-# Further reading
+Scenario: Fixing a broken branch
+--------------------------------
 
+Example usage:
+
+```bash +exec
+git -C ~/repos/mpc reflog main
+```
+
+<!-- end_slide -->
+
+Scenario: Splitting commits in an unclean tree
+----------------------------------------------
+
+You want to split your commits, but your changes should ideally be split into
+multiple commits.
+
+Bad options:
+- Remake your changes and stage accordingly
+<!-- pause -->
+- Abuse `git stash`... somehow?
+<!-- pause -->
+- Put everything into one commit?
+
+<!-- end_slide -->
+
+Scenario: Splitting commits in an unclean tree
+----------------------------------------------
+
+You can stage changes interactively:
+
+```bash
+git add -i # stage changes interactively
+git add -p <file> # stage changes through a prompt
+```
+
+<!-- end_slide -->
+
+Scenario: Working on multiple features concurrently
+---------------------------------------------------
+
+You've been assigned multiple tasks on the same repository this sprint, and you
+want to work on them concurrently.
+
+Bad options:
+- `git checkout`/`git switch` whenever you change contexts
+<!-- pause -->
+- Multiple clones of the same repository locally
+<!-- pause -->
+- Work on things in serial (sorry management)
+
+<!-- end_slide -->
+
+Scenario: Working on multiple features concurrently
+---------------------------------------------------
+
+Git supports checking out the same clone of a repository in multiple locations
+(these directories are called *worktrees*):
+
+```bash
+git worktree add # make a new directory with a clone
+git worktree list # what worktree's have you made?
+git worktree remove # make a new directory with a clone
+```
+
+Limitation: two worktrees cannot have the same commit checked out at the same time!
+
+<!-- end_slide -->
+
+Further reading
+---------------
+
+Julia Evan's blog posts on git:
 - https://jvns.ca/blog/2023/11/23/branches-intuition-reality/
 
+The git book:
+- https://git-scm.com/book/en/v2
+
 <!-- end_slide -->
 
-# Materials
+Materials
+---------
 
 Materials from this presentation can be obtained here:
 
 ```bash +exec_replace +no_background
 echo https://github.com/sadlerap/pro-git | qrencode -t UTF8i -m 2 | lolcat -f
+```
+```
+https://github.com/sadlerap/pro-git
 ```
